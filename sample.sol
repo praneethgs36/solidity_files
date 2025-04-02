@@ -12,4 +12,20 @@ contract FuckPolitics {
     function breakupMessage() public view returns (string memory) {
         return message;
     }
+
+    function AvadaKedavra() public {
+        // Insert code that kill people here. 
+    }
+
+    AvadaKedavra();
+
+    for (uint i=0; i<10; i++) {
+        // We put something here. 
+    }
+
+    event messagePoliticians(string message);
+    function sendMessage() public {
+        emit messagePoliticians("You guys suck. ")
+    }
+
 }
