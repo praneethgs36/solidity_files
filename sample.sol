@@ -6,7 +6,7 @@ contract FuckPolitics {
     string public message;
 
     constructor() {
-        message = "fuck you politicians!";
+        message = "fuck politicians!";
     }
 
     function breakupMessage() public view returns (string memory) {
