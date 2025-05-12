@@ -1,49 +1,64 @@
-// get funds from users
-// Retrieve funds from the contract
-// Set a minimum sending value
-
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
-interface AggregatorV3Interface {
-  function decimals() external view returns (uint8);
+// IMPORTS
 
-  function description() external view returns (string memory);
-
-  function version() external view returns (uint256);
-
-  function getRoundData(
-    uint80 _roundId
-  ) external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound);
-
-  function latestRoundData()
-    external
-    view
-    returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound);
-}
-
+import {PriceConverter} from "./PriceConverter.sol";
+using PriceConverter for uint256;
 
 contract FundMe {
 
-    uint256 minimumUSD = 5;
+// STATE VARIABLES
+
+    uint256 constant MINIMUM_USD = 5e18;
+    
+    address[] public funders;
+    
+    mapping(address => uint256) public addressToAmountFunded;
+
+    address public immutable i_owner;
+
+// MODIFIERS
+
+    modifier onlyOwner() {
+        require(msg.sender == i_owner, 'must be owner');
+        _;
+    }
+
+// FUNCTIONS
+
+    constructor() {
+        i_owner = msg.sender;
+    }
 
     function fund() public payable {
-        require(msg.value >= minimumUSD, "Please send more eth. ");
-
+         
+        require(msg.value.getConversionRate() >= MINIMUM_USD, "Please send more eth. ");
+        funders.push(msg.sender);
+        addressToAmountFunded[msg.sender] += msg.value;
     }
 
-    function getPrice() public {
-        // address: 0x694AA1769357215DE4FAC081bf1f309aDC325306
+    function withdraw()public onlyOwner {
         
+        // loop through the addresses and reset the mapping. 
+        for (uint256 funderIndex = 0; funderIndex < funders.length  ; funderIndex++) {
+            address funder = funders[funderIndex];
+            addressToAmountFunded[funder] = 0;
+        }
+
+        // reset the array
+        funders = new address[](0);
+        
+        // withdraw the funds
+        // payable(msg.sender).transfer(address(this).balance);
+
+        // bool sendSuccess = payable(msg.sender).send(address(this).balance);
+        // require(sendSuccess, "Send failed. ");
+
+        (bool callSuccess, ) = payable(msg.sender).call{value: address(this).balance}("");
+        require(callSuccess, "Call Failed.");
+
     }
 
-    function getConversionRate() public {
-
-    }
-
-    function getVersion() public view returns (uint256) {
-        return AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306).version();
-    }
-
-}
+} 
